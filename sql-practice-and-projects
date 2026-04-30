@@ -1,0 +1,153 @@
+# 🔍 Difference Between ISNULL and COALESCE in SQL Server
+
+> 📺 Reference: Ankit Bansal SQL Practice Series
+
+---
+
+## 📌 Overview
+
+| Feature | ISNULL | COALESCE |
+|---------|--------|----------|
+| **Arguments** | Only 2 | Multiple (2+) |
+| **Default Value** | ❌ Not supported | ✅ Supported |
+| **Data Type** | Follows 1st argument | Returns full value |
+| **Standard** | SQL Server specific | ANSI SQL Standard |
+| **NULL handling** | Replaces NULL with 2nd arg | Returns first non-NULL |
+
+---
+
+## 🛠️ Setup — Create Table & Insert Data
+
+```sql
+USE interview_que;
+
+CREATE TABLE employee
+(
+    id         INT,
+    first_name VARCHAR(4),
+    last_name  VARCHAR(4),
+    salary     INT
+);
+
+INSERT INTO employee (id, first_name, last_name, salary)
+VALUES 
+(1, NULL, 'Bans', 100),
+(2, 'Rahu', 'Gupt', 200),
+(3, NULL, NULL, NULL);
+```
+
+### 📊 Table Data
+
+1	NULL	Bans	100
+2	Rahu	Gupt	200
+3	NULL	NULL	NULL
+
+---
+
+## 1️⃣ Basic Usage — ISNULL vs COALESCE
+
+```sql
+SELECT *, 
+    ISNULL(first_name, last_name) AS emp_name 
+FROM employee;
+```
+
+### 📊 Output
+1	NULL	Bans	100	Bans
+2	Rahu	Gupt	200	Rahu
+3	NULL	NULL	NULL	NULL
+> 💡 ISNULL returns last_name when first_name is NULL.
+> If both are NULL, returns NULL.
+
+---
+
+## 2️⃣ Default Value — ISNULL vs COALESCE
+
+### ❌ ISNULL with Default — THROWS ERROR
+```sql
+-- ERROR: ISNULL does NOT support default value
+SELECT *, 
+    ISNULL(first_name, last_name, 'default') AS emp_name 
+FROM employee;
+```
+### ✅ COALESCE with Default — WORKS PERFECTLY
+```sql
+SELECT *, 
+    ISNULL(first_name, last_name)              AS emp_name,
+    COALESCE(first_name, last_name, 'default') AS emp_name_cols
+FROM employee;
+```
+
+### 📊 Output
+1	NULL	Bans	100	Bans	Bans
+2	Rahu	Gupt	200	Rahu	Rahu
+3	NULL	NULL	NULL	NULL	default
+
+> 💡 ISNULL returns NULL when both values are NULL.
+> COALESCE returns 'default' — the fallback value! ✅
+
+---
+
+## 3️⃣ Data Type Difference — VARCHAR
+
+```sql
+SELECT *, 
+    ISNULL(first_name, 'default')    AS emp_name,
+    COALESCE(first_name, 'default')  AS emp_name_cols
+FROM employee;
+```
+
+### 📊 Output
+1	NULL	Bans	100	defa	default
+2	Rahu	Gupt	200	Rahu	Rahu
+3	NULL	NULL	NULL	defa	default
+> ⚠️ KEY DIFFERENCE:
+> ISNULL   → 'defa'    ← Truncated to VARCHAR(4) data type!
+> COALESCE → 'default' ← Returns full string value! ✅
+
+---
+
+## 4️⃣ Data Type Difference — INTEGER
+
+```sql
+SELECT *, 
+    ISNULL(salary, 10.2)   AS salary_isnull,
+    COALESCE(salary, 10.2) AS salary_coalesce
+FROM employee;
+```
+
+### 📊 Output
+1	NULL	Bans	100	100	100
+2	Rahu	Gupt	200	200	200
+3	NULL	NULL	NULL	10	10.2
+> ⚠️ KEY DIFFERENCE:
+> ISNULL   → 10   ← Truncated to INT data type!
+> COALESCE → 10.2 ← Returns full decimal value! ✅
+
+---
+
+## 📊 Final Comparison Summary
+
+| Scenario | ISNULL | COALESCE |
+|----------|--------|----------|
+| Both values NULL | Returns NULL | Returns default |
+| Default value support | ❌ Only 2 args | ✅ Multiple args |
+| VARCHAR(4) + 'default' | Returns 'defa' | Returns 'default' |
+| INT + 10.2 | Returns 10 | Returns 10.2 |
+| Data type handling | Follows 1st arg type | Preserves actual value |
+| SQL Standard | SQL Server only | ANSI Standard ✅ |
+
+---
+
+## 💡 Key Takeaways
+
+- ✅ Use **COALESCE** when you need a **default value**
+- ✅ Use **COALESCE** when you need **exact data type** preserved
+- ✅ Use **COALESCE** for **multiple fallback values**
+- ⚠️ **ISNULL** truncates data based on **1st argument data type**
+- ⚠️ **ISNULL** only accepts **2 arguments** — no default support
+- 📌 **COALESCE** is **ANSI SQL standard** — works across databases
+
+---
+
+## 🏷️ Topics
